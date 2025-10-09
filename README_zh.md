@@ -256,7 +256,7 @@ Options:
                     10(e5-base-v2),
                     11(multilingual-e5-small)
   -p, --model-path  path of the model folder, valid for -m, default: ./embedding_models/
-  -C, --cpu         force the use of cpu, otherwise prioritize using the gpu
+  -C, --cpu         force the use of cpu, otherwise prioritize using the gpu, valid for -m
   -n, --num         the number of most similar results, valid for -m, default: 5
   -u, --summary     print selected snippets summary, support all and categories, multiple categories separated by commas
   -s, --save        save -i, -t, -e selected snippets to files
