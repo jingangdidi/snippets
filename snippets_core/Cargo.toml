@@ -1,0 +1,29 @@
+[package]
+name = "snippets"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[build-dependencies]
+ron = { workspace = true }
+serde = { workspace = true }
+embedding_lib = { workspace = true }
+
+[dependencies]
+argh = { workspace = true }
+thiserror = { workspace = true }
+ron = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tabled = { workspace = true }
+arboard = { workspace = true }
+embedding_lib = { workspace = true }
+
+[features]
+default = []
+embedding = ["embedding_lib/embedding"] # use embedding feature calculate embedding vector
+cuda = ["embedding", "embedding_lib/cuda"]
+metal = ["embedding", "embedding_lib/metal"]
