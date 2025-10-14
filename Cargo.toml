@@ -1,0 +1,37 @@
+[workspace]
+members = [
+    "snippets_core",
+    "embedding_lib",
+]
+
+resolver = "2"
+
+[profile.release]
+opt-level = 3
+panic = "abort"
+strip = true
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+description = "command line snippets tool"
+repository = "https://github.com/jingangdidi/snippets"
+keywords = ["snippets", "embeddings", "command-line-tool", "code"]
+license = "MIT"
+
+[workspace.dependencies]
+argh = { version = "0.1.10" }
+thiserror = { version = "1.0" }
+ron = { version = "0.10.1" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+tabled = { version = "0.15.0" }
+arboard = { version = "3.4.0" }
+
+candle-core = { version = "0.9.1" }
+candle-nn = { version = "0.9.1" }
+candle-transformers = { version = "0.9.1" }
+tokenizers = { version = "0.22.1" }
+safetensors = { version = "0.6.2" }
+
+embedding_lib = { path = "./embedding_lib" }
