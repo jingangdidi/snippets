@@ -19,9 +19,9 @@ struct Paras {
     #[argh(option, short = 'i')]
     id: Option<String>,
 
-    /// get snippets by category, supported tags were written in snippets files, multiple categories separated by commas
+    /// get snippets by tag, supported tags were written in snippets files or default 11 tags, multiple categories separated by commas
     #[argh(option, short = 't')]
-    category: Option<String>,
+    tag: Option<String>,
 
     /// get snippets by keyword search or semantic search (need -m embedding model)
     #[argh(option, short = 'e')]
@@ -59,6 +59,10 @@ struct Paras {
     #[argh(switch, short = 'c')]
     clipboard: bool,
 
+    /// print all supported tags
+    #[argh(switch, short = 'T')]
+    show_tags: bool,
+
     /// output path, default: ./saved_snippets/, you can also set the environment variable SNIPPETS_OUTPATH to set this argument
     #[argh(option, short = 'o')]
     outpath: Option<String>,
@@ -79,12 +83,13 @@ pub struct ModelInfo {
 /// parsed paras
 pub struct ParsedParas {
     pub ids:       Vec<usize>,        // get snippets by id, multiple ids separated by commas
-    pub tags:      Vec<SnipTag>,      // get snippets by category, supported tags were written in snippets files, multiple categories separated by commas
+    pub tags:      Vec<SnipTag>,      // get snippets by tag, supported tags were written in snippets files or default 11 tags, multiple categories separated by commas
     pub search:    Option<String>,    // get snippets by search keyword
     pub files:     Vec<PathBuf>,      // if use -f specify *.snippets files, will not search from current path and binary file path
     pub model:     Option<ModelInfo>, // selected model, model.safetensors, config.json, tokenizer.json, the number of most similar results
     pub save:      bool,              // save -i or -t or -s to files, if not use -s, will print to terminal
     pub clipboard: bool,              // copy -i or -t or -s to clipboard
+    pub show_tags: bool,              // print all supported tags
     pub summary:   Vec<SnipTag>,      // print selected snippets summary
     pub outpath:   PathBuf,           // save to this path, default: ./saved_snippets/
 }
@@ -126,7 +131,7 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
             },
             None => Vec::new(),
         },
-        tags: match para.category {
+        tags: match para.tag {
             Some(c) => {
                 let mut category_vec: Vec<SnipTag> = Vec::new();
                 for i in c.split(",") {
@@ -134,7 +139,7 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
                     if let Some(t) = SnipTag::string_to_tag(&tmp_category) {
                         category_vec.push(t);
                     } else {
-                        return Err(MyError::ParaError{para: format!("snippet category only support: {}, not {}", SnipTag::supported_tags(), i)})
+                        return Err(MyError::ParaError{para: format!("snippet tag only support: {}, not {}", SnipTag::supported_tags(), i)})
                     }
                 }
                 category_vec
@@ -206,6 +211,7 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
                 _ => unreachable!(),
             }
         },
+        show_tags: para.show_tags,
         outpath: match para.outpath {
             Some(o) => PathBuf::from(&o),
             None => match EnvVarValue::Path(PathBuf::from("./saved_snippets/")).get_env_var("SNIPPETS_OUTPATH")? {
@@ -214,61 +220,63 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
             },
         },
     };
-    // cannot use -i, -t, -e, -u simultaneously
-    // -t and -e can be used simultaneously
-    match (out.ids.is_empty(), out.tags.is_empty(), out.search.is_none(), out.summary.is_empty()) {
-        (true,  true,  true,  true)  => return Err(MyError::ParaError{para: "you must specify one of -i, -t, -e, -u".to_string()}),
-        (true,  true,  true,  false) => (),
-        (true,  true,  false, true)  => (),
-        (true,  true,  false, false) => return Err(MyError::ParaError{para: "cannot use -e and -u simultaneously".to_string()}),
-        (true,  false, true,  true)  => (),
-        (true,  false, true,  false) => return Err(MyError::ParaError{para: "cannot use -t and -u simultaneously".to_string()}),
-        (true,  false, false, true)  => (), // -t and -e
-        (true,  false, false, false) => return Err(MyError::ParaError{para: "cannot use -t, -e and -u simultaneously".to_string()}),
-        (false, true,  true,  true)  => (),
-        (false, true,  true,  false) => return Err(MyError::ParaError{para: "cannot use -i and -u simultaneously".to_string()}),
-        (false, true,  false, true)  => return Err(MyError::ParaError{para: "cannot use -i and -e simultaneously".to_string()}),
-        (false, true,  false, false) => return Err(MyError::ParaError{para: "cannot use -i, -e and -u simultaneously".to_string()}),
-        (false, false, true,  true)  => return Err(MyError::ParaError{para: "cannot use -i and -t simultaneously".to_string()}),
-        (false, false, true,  false) => return Err(MyError::ParaError{para: "cannot use -i, -t and -u simultaneously".to_string()}),
-        (false, false, false, true)  => return Err(MyError::ParaError{para: "cannot use -i, -t and -e simultaneously".to_string()}),
-        (false, false, false, false) => return Err(MyError::ParaError{para: "cannot use -i, -t, -e and -u simultaneously".to_string()}),
-    }
-    // if not use embedding feature, ignore -m, -p, -C, -n
-    if !cfg!(feature = "embedding") {
-        if out.model.is_some() {
-            println!("Warning - -m is only valid for embedding feature");
+    if !out.show_tags {
+        // cannot use -i, -t, -e, -u simultaneously
+        // -t and -e can be used simultaneously
+        match (out.ids.is_empty(), out.tags.is_empty(), out.search.is_none(), out.summary.is_empty()) {
+            (true,  true,  true,  true)  => return Err(MyError::ParaError{para: "you must specify one of -i, -t, -e, -u".to_string()}),
+            (true,  true,  true,  false) => (),
+            (true,  true,  false, true)  => (),
+            (true,  true,  false, false) => return Err(MyError::ParaError{para: "cannot use -e and -u simultaneously".to_string()}),
+            (true,  false, true,  true)  => (),
+            (true,  false, true,  false) => return Err(MyError::ParaError{para: "cannot use -t and -u simultaneously".to_string()}),
+            (true,  false, false, true)  => (), // -t and -e
+            (true,  false, false, false) => return Err(MyError::ParaError{para: "cannot use -t, -e and -u simultaneously".to_string()}),
+            (false, true,  true,  true)  => (),
+            (false, true,  true,  false) => return Err(MyError::ParaError{para: "cannot use -i and -u simultaneously".to_string()}),
+            (false, true,  false, true)  => return Err(MyError::ParaError{para: "cannot use -i and -e simultaneously".to_string()}),
+            (false, true,  false, false) => return Err(MyError::ParaError{para: "cannot use -i, -e and -u simultaneously".to_string()}),
+            (false, false, true,  true)  => return Err(MyError::ParaError{para: "cannot use -i and -t simultaneously".to_string()}),
+            (false, false, true,  false) => return Err(MyError::ParaError{para: "cannot use -i, -t and -u simultaneously".to_string()}),
+            (false, false, false, true)  => return Err(MyError::ParaError{para: "cannot use -i, -t and -e simultaneously".to_string()}),
+            (false, false, false, false) => return Err(MyError::ParaError{para: "cannot use -i, -t, -e and -u simultaneously".to_string()}),
         }
-        if para.model_path.is_some() {
-            println!("Warning - -p is only valid for embedding feature");
-        }
-        if para.cpu {
-            println!("Warning - -C is only valid for embedding feature");
-        }
-        if para.num.is_some() {
-            println!("Warning - -n is only valid for embedding feature");
-        }
-    } else {
-        // -m is only valid for -e
-        if out.search.is_none() && out.model.is_some() {
-            println!("Warning - -m is only valid for -e");
-        }
-        if out.model.none() {
+        // if not use embedding feature, ignore -m, -p, -C, -n
+        if !cfg!(feature = "embedding") {
+            if out.model.is_some() {
+                println!("Warning - -m is only valid for embedding feature");
+            }
             if para.model_path.is_some() {
-                println!("Warning - -p is only valid for -m");
+                println!("Warning - -p is only valid for embedding feature");
             }
             if para.cpu {
-                println!("Warning - -C is only valid for -m");
+                println!("Warning - -C is only valid for embedding feature");
             }
             if para.num.is_some() {
-                println!("Warning - -n is only valid for -m");
+                println!("Warning - -n is only valid for embedding feature");
+            }
+        } else {
+            // -m is only valid for -e
+            if out.search.is_none() && out.model.is_some() {
+                println!("Warning - -m is only valid for -e");
+            }
+            if out.model.is_none() {
+                if para.model_path.is_some() {
+                    println!("Warning - -p is only valid for -m");
+                }
+                if para.cpu {
+                    println!("Warning - -C is only valid for -m");
+                }
+                if para.num.is_some() {
+                    println!("Warning - -n is only valid for -m");
+                }
             }
         }
-    }
-    // if save, create output path
-    if out.save && !(out.outpath.exists() && out.outpath.is_dir()) {
-        if let Err(err) = create_dir_all(&out.outpath) {
-            return Err(MyError::CreateDirAllError{dir_name: out.outpath.to_str().unwrap().to_string(), error: err})
+        // if save, create output path
+        if out.save && !(out.outpath.exists() && out.outpath.is_dir()) {
+            if let Err(err) = create_dir_all(&out.outpath) {
+                return Err(MyError::CreateDirAllError{dir_name: out.outpath.to_str().unwrap().to_string(), error: err})
+            }
         }
     }
     Ok(out)
@@ -357,4 +365,3 @@ fn get_snippet_files(file: &str) -> Result<Vec<PathBuf>, MyError> {
     }
     Ok(files)
 }
-
