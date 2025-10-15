@@ -1,0 +1,47 @@
+[
+    SingleSnippet(
+        tags:        ["Code", "Python"],
+        discription: "python hello world",
+        content:     r##"
+print("Hello World")
+"##,
+    ),
+    SingleSnippet(
+        tags:        ["Code", "Rust"],
+        discription: "rust hello world",
+        content:     r##"
+println!("Hello World");
+"##,
+    ),
+    SingleSnippet(
+        tags:        ["Code", "Python"],
+        discription: "python mkdir",
+        content:     r##"
+import os
+
+def path_exist(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+"##,
+    ),
+    SingleSnippet(
+        tags:        ["Code", "Python"],
+        discription: "python time",
+        content:     r##"
+import time
+
+start = time.time()
+end = time.time()
+print('start time: '+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start)))
+print('end   time: '+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end)))
+print('total: '+str(end - start)+' seconds')
+"##,
+    ),
+    SingleSnippet(
+        tags:        ["Code", "Python"],
+        discription: "python package version",
+        content:     r##"
+python -c "import openai; print(openai.__version__)"
+"##,
+    ),
+]
