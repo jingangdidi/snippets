@@ -70,11 +70,26 @@ fn main() {
                 .to_io_writer_pretty(f, &all_snippets, ron::ser::PrettyConfig::new().escape_strings(false).compact_arrays(true))
                 .expect("Error - Failed to write to file ../snippets_database/default.snippets");
             // save enum
+            if all_tags.is_empty() { // default tags
+                all_tags = HashSet::from([
+                    "Code".to_string(),
+                    "Command".to_string(),
+                    "Doc".to_string(),
+                    "Git".to_string(),
+                    "Manual".to_string(),
+                    "Note".to_string(),
+                    "Other".to_string(),
+                    "Python".to_string(),
+                    "Rust".to_string(),
+                    "Shell".to_string(),
+                    "Tool".to_string(),
+                ]);
+            }
             // tag's first letter must be alphabetic and uppercase
             if all_tags.iter().any(|t| t.chars().next().map(|c| !c.is_alphabetic() || !c.is_uppercase()).unwrap_or(true)) {
                 panic!("all tags must start with a capital letter")
             }
-            let mut sorted_tags: Vec<String> =all_tags.into_iter().collect::<Vec<_>>();
+            let mut sorted_tags: Vec<String> = all_tags.into_iter().collect::<Vec<_>>();
             sorted_tags.sort();
             let enum_str = format!(
                 r##"use std::collections::HashSet;
@@ -227,4 +242,3 @@ fn read_file_as_snippets(
 
     (tags, snippets)
 }
-
