@@ -323,7 +323,7 @@ impl Snippets {
                 let (comment, fmt) = SnipTag::commit_format(&s.tags);
                 let out_file = paras.outpath.join(&format!("{}.{}", id, fmt));
                 let mut writer = my_writer(&out_file)?;
-                if comment.is_empty() {
+                if !comment.is_empty() {
                     writer.write_all(comment.as_bytes())?;
                 }
                 writer.write_all(s.discription.replace("\n", "").as_bytes())?;
@@ -422,3 +422,4 @@ impl Snippets {
         Ok(())
     }
 }
+
