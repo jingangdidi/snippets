@@ -3,12 +3,12 @@
 
 [English readme](https://github.com/jingangdidi/snippets/blob/main/README.md)
 
-**A lightweight, cross-platform command-line tool for storing and retrieving code snippets, commands, installation notes, usage instructions, and text-based information, all within a single ~500Kb (only keyword search) or ~3.8Mb (with semantic search) executable.**
+**A lightweight, cross-platform command-line tool for storing and retrieving code snippets, commands, installation notes, usage instructions, and text-based information, all within a single executable.**
 
-**轻量级命令行代码块工具，无需安装，仅一个可执行文件（不需要语义搜索\~500Kb， 包含语义搜索\~3.8Mb），记录自己常用的代码块，命令行快速检索**
+**轻量级命令行代码块工具，无需安装，仅一个可执行文件，记录自己常用的代码块、软件安装说明、常用命令等，在命令行快速检索**
 
 ## 特点
-- 单个可执行文件（不使用语义搜索\~500Kb，使用语义搜索\~3.8Mb），无需安装
+- 单个可执行文件，无需安装，命令行调用
 - 多种检索方式：id、分类标签、关键词搜索、语义搜索
 - 支持命令行打印、复制到剪切板、保存至文件
 - 语义搜索支持多种embedding模型
@@ -23,8 +23,9 @@
 
 - 以`.snippets`为格式后缀，以便与其他文件进行区分
 - `tags`填写分类标签，可以有多个，首字母大写，例如：Code、Command、InstallPackage、Note、Python、Rust
-- `discription`填写简短的描述信息，如果放在`""`内则特殊字符需要转义，最简单就直接放在`r##"`和`"##`之间，不需要转义。注意命令行会以表格形式打印每个snippet，因此描述信息每行不要太宽，长内容可分为多行
+- `discription`填写简短的描述信息，语义搜索时会与该描述信息计算相似度
 - `content`填写具体内容，比如代码块，放在`r##"`和`"##`之间，不需要转义
+- 将自己准备的多个`.snippets`文件放到`snippets_database`路径下，编译时会整合到`default.snippets`中编译到程序内
 
 示例文件见[example.snippets](https://github.com/jingangdidi/snippets/blob/main/snippets_database/example.snippets)
 ```
@@ -60,7 +61,7 @@ pip uninstall package_name
 
 **3. 下载embedding模型（可选，语义搜索要用）**
 
-支持以下11种模型：
+支持以下11种模型，可下载多个，然后放到`embedding_models`路径下：
 1. [granite-embedding-small-english-r2](https://huggingface.co/ibm-granite/granite-embedding-small-english-r2)
 2. [granite-embedding-english-r2](https://huggingface.co/ibm-granite/granite-embedding-english-r2)
 3. [granite-embedding-107m-multilingual](https://huggingface.co/ibm-granite/granite-embedding-107m-multilingual)
@@ -169,22 +170,27 @@ embedding_models # 本地模型路径，编译时固定为./embedding_models。�
     ./snippets -t r,command
     ```
 
-5. 使用关键词搜索，会在描述信息和具体内容中搜索，不区分大小写
+5. 使用关键词搜索，会在discription描述信息和content具体内容中搜索，不区分大小写
     ```
     ./snippets -e "pandas"
     ```
 
-6. 搜索时使用`-m`指定embedding模型，则进行语义搜索，默认打印前5个相似度最高的snippets。`-m 1`表示使用`granite-embedding-small-english-r2`模型
+6. -t和-e可以联合使用，缩小搜索范围
+    ```
+    ./snippets -t code -e "pandas"
+    ```
+
+7. 搜索时使用`-m`指定embedding模型，则进行语义搜索，默认打印前5个相似度最高的snippets。`-m 1`表示使用`granite-embedding-small-english-r2`模型
     ```
     ./snippets -e "python pandas usage" -m 1
     ```
 
-7. 如果编译时使用了`cuda`或`metal`，则优先使用GPU计算embedding，可使用`-C`强制使用CPU
+8. 如果编译时使用了`cuda`或`metal`，则优先使用GPU计算embedding，可使用`-C`强制使用CPU
     ```
     snippets -e "python pandas usage" -m 1 -C
     ```
 
-8. 将获取的snippets保存至本地（以id为文件名，主体内容、描述信息、分类标签写入到文件中）
+9. 将获取的snippets保存至本地（以id为文件名，主体内容、描述信息、分类标签写入到文件中）
     ```
     snippets -i 27,29 -s
     ```
@@ -195,7 +201,7 @@ embedding_models # 本地模型路径，编译时固定为./embedding_models。�
      └─ 29.r # 分类标签含有R，格式后缀为`.r`，描述信息前加上`# `作为注释
     ```
 
-9. 将获取的snippets复制到剪切板（只复制主体内容，不包含id、描述信息、分类标签）
+10. 将获取的snippets复制到剪切板（只复制主体内容，不包含id、描述信息、分类标签）
     ```
     snippets -i 27,29 -c
     ```
