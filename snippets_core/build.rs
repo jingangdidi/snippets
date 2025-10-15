@@ -50,7 +50,7 @@ fn main() {
                     let tmp_file_path = entry.path();
                     if tmp_file_path.is_file() {
                         if let (Some(name), Some(ext)) = (tmp_file_path.file_name(), tmp_file_path.extension()) {
-                            if name != "default.snippets" && ext == "snippets" {
+                            if name != "default.snippets" && name != "example.snippets" && ext == "snippets" {
                                 let (tags, snippets) = read_file_as_snippets(&tmp_file_path, &all_models);
                                 all_tags.extend(tags);
                                 all_snippets.extend(snippets);
@@ -227,3 +227,4 @@ fn read_file_as_snippets(
 
     (tags, snippets)
 }
+
