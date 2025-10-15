@@ -253,14 +253,16 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
         if out.search.is_none() && out.model.is_some() {
             println!("Warning - -m is only valid for -e");
         }
-        if para.model_path.is_some() {
-            println!("Warning - -p is only valid for -m");
-        }
-        if para.cpu {
-            println!("Warning - -C is only valid for -m");
-        }
-        if para.num.is_some() {
-            println!("Warning - -n is only valid for -m");
+        if out.model.none() {
+            if para.model_path.is_some() {
+                println!("Warning - -p is only valid for -m");
+            }
+            if para.cpu {
+                println!("Warning - -C is only valid for -m");
+            }
+            if para.num.is_some() {
+                println!("Warning - -n is only valid for -m");
+            }
         }
     }
     // if save, create output path
@@ -355,3 +357,4 @@ fn get_snippet_files(file: &str) -> Result<Vec<PathBuf>, MyError> {
     }
     Ok(files)
 }
+
