@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::fs;
+use std::fs::{self, create_dir_all};
 
 use ron::de::from_str;
 use serde::{Deserialize, Serialize};
@@ -59,40 +59,47 @@ fn main() {
                     }
                 }
             }
-            // save default.snippets
-            let f = fs::File::options()
-                .create(true)
-                .write(true)
-                .truncate(true)
-                .open("../snippets_database/default.snippets")
-                .expect("Error - Failed opening file ../snippets_database/default.snippets");
-            ron::Options::default()
-                .to_io_writer_pretty(f, &all_snippets, ron::ser::PrettyConfig::new().escape_strings(false).compact_arrays(true))
-                .expect("Error - Failed to write to file ../snippets_database/default.snippets");
-            // save enum
-            if all_tags.is_empty() { // default tags
-                all_tags = HashSet::from([
-                    "Code".to_string(),
-                    "Command".to_string(),
-                    "Doc".to_string(),
-                    "Git".to_string(),
-                    "Manual".to_string(),
-                    "Note".to_string(),
-                    "Other".to_string(),
-                    "Python".to_string(),
-                    "Rust".to_string(),
-                    "Shell".to_string(),
-                    "Tool".to_string(),
-                ]);
-            }
-            // tag's first letter must be alphabetic and uppercase
-            if all_tags.iter().any(|t| t.chars().next().map(|c| !c.is_alphabetic() || !c.is_uppercase()).unwrap_or(true)) {
-                panic!("all tags must start with a capital letter")
-            }
-            let mut sorted_tags: Vec<String> = all_tags.into_iter().collect::<Vec<_>>();
-            sorted_tags.sort();
-            let enum_str = format!(
-                r##"use std::collections::HashSet;
+        }
+    } else {
+        if let Err(err) = create_dir_all(tmp_dir) {
+            panic!("Error - create dir ../snippets_database/ failed: {:?}", err);
+        }
+    }
+
+    // save default.snippets
+    let f = fs::File::options()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("../snippets_database/default.snippets")
+        .expect("Error - Failed opening file ../snippets_database/default.snippets");
+    ron::Options::default()
+        .to_io_writer_pretty(f, &all_snippets, ron::ser::PrettyConfig::new().escape_strings(false).compact_arrays(true))
+        .expect("Error - Failed to write to file ../snippets_database/default.snippets");
+    // save enum
+    if all_tags.is_empty() { // default tags
+        all_tags = HashSet::from([
+            "Code".to_string(),
+            "Command".to_string(),
+            "Doc".to_string(),
+            "Git".to_string(),
+            "Manual".to_string(),
+            "Note".to_string(),
+            "Other".to_string(),
+            "Python".to_string(),
+            "Rust".to_string(),
+            "Shell".to_string(),
+            "Tool".to_string(),
+        ]);
+    }
+    // tag's first letter must be alphabetic and uppercase
+    if all_tags.iter().any(|t| t.chars().next().map(|c| !c.is_alphabetic() || !c.is_uppercase()).unwrap_or(true)) {
+        panic!("all tags must start with a capital letter")
+    }
+    let mut sorted_tags: Vec<String> = all_tags.into_iter().collect::<Vec<_>>();
+    sorted_tags.sort();
+    let enum_str = format!(
+        r##"use std::collections::HashSet;
 
 use serde::{{
     Deserialize,
@@ -167,17 +174,13 @@ where
         .collect::<Result<HashSet<SnipTag>, D::Error>>()
 }}
 "##,
-                sorted_tags.join(",\n    "),
-                sorted_tags.iter().map(|t| format!("Self::{} => \"{}\".to_string()", t, t)).collect::<Vec<_>>().join(",\n            "),
-                sorted_tags.iter().map(|t| format!("Self::{}", t)).collect::<Vec<_>>().join(", "),
-                sorted_tags.iter().map(|t| format!("\"{}\" => Self::{}", t.to_lowercase(), t)).collect::<Vec<_>>().join(",\n            "),
-                sorted_tags.join(", "),
-            );
-            fs::write("../snippets_database/tags.rs", enum_str).expect("Error - save ../snippets_database/tags.rs failed");
-        }
-    } else {
-        println!("Error - no such path: ../snippets_database/");
-    }
+        sorted_tags.join(",\n    "),
+        sorted_tags.iter().map(|t| format!("Self::{} => \"{}\".to_string()", t, t)).collect::<Vec<_>>().join(",\n            "),
+        sorted_tags.iter().map(|t| format!("Self::{}", t)).collect::<Vec<_>>().join(", "),
+        sorted_tags.iter().map(|t| format!("\"{}\" => Self::{}", t.to_lowercase(), t)).collect::<Vec<_>>().join(",\n            "),
+        sorted_tags.join(", "),
+    );
+    fs::write("../snippets_database/tags.rs", enum_str).expect("Error - save ../snippets_database/tags.rs failed");
 }
 
 /// read file to string, skip first line and last line
