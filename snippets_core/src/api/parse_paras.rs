@@ -161,7 +161,13 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
                     None => {
                         // get model from path of the current running executable
                         let binary_path = match current_exe() {
-                            Ok(binary_path) => binary_path.join("embedding_models").to_str().unwrap().to_string(),
+                            Ok(mut binary_path) => {
+                                if binary_path.pop() { // Truncates binary_path to parent
+                                    binary_path.join("embedding_models").to_str().unwrap().to_string()
+                                } else {
+                                    "./embedding_models/".to_string()
+                                }
+                            },
                             Err(_) => "./embedding_models/".to_string(),
                         };
                         // get model from env
@@ -380,3 +386,4 @@ fn get_snippet_files(file: &str) -> Result<Vec<PathBuf>, MyError> {
     }
     Ok(files)
 }
+
