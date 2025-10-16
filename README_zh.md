@@ -197,7 +197,7 @@ embedding_models # 本地模型路径，编译时固定为"./embedding_models"�
     snippets -e "python pandas usage" -m 1 -C
     ```
 
-9. 使用`-s`或设置环境变量`SNIPPETS_SAVE=true`，将获取的snippets保存至本地（以id为文件名，主体内容、描述信息、分类标签写入到文件中）
+9. 使用`-s`或设置环境变量`SNIPPETS_SAVE=true`，将获取的snippets保存至本地（以id为文件名，主体内容和描述信息写入到文件中）
     ```
     snippets -i 27,29 -s
     ```
