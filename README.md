@@ -19,7 +19,7 @@
 
   [latest release](https://github.com/jingangdidi/snippets/releases)
 
-  This precompiled file only supports the default 11 classification tags, which means that only these 11 tags can be used in your `.snippets` files:
+  This pre-compiled file only supports the default 11 classification tags, which means that only these 11 tags can be used in your `.snippets` files:
   ```
   Code, Command, Doc, Git, Manual, Note, Other, Python, Rust, Shell, Tool
   ```
@@ -27,13 +27,12 @@
 
 **2. prepare your snippets file**
 
-- Use `.snippets` as the format suffix to distinguish it from other files
+- Use `.snippets` as the format suffix to distinguish it from other files.
 - `tags`: Fill in classification tags, which can be multiple with capitalized first letters, such as Code, Command, Note, Python, Rust.
 - `description`: Fill in a brief description information, and semantic search will calculate similarity with the description information.
 - `content`: Fill in specific content, such as code blocks, placed between `r##` and `"##` without escaping.
 - If using a pre-built binary, place all prepared `.snippets` files in the current path, or in the same path as the program, or in the path specified by `-f`.
-- 如果自己编译，则将自己准备的所有`.snippets`文件放到`snippets_database`路径下，编译时会整合到`default.snippets`中编译到程序内，使用时不再依赖`.snippets`文件
-- If you compile it yourself, place all the `.snippets` files you have prepared in the `snippets_database` path. During compilation, they will be integrated into the `default.snippets` file and compiled into the program. When used, they will no longer depend on the `.snippets` files.
+- If you compile it yourself, place all the `.snippets` files you have prepared in the `snippets_database` path. During compilation, they will be integrated into the `default.snippets` file and compiled into the program. When used, they will no longer depend on these `.snippets` files.
 
 Example files can be found in [example.snippets](https://github.com/jingangdidi/snippets/blob/main/snippets_database/example.snippets)
 ```
@@ -69,7 +68,7 @@ pip uninstall package_name
 
 **3. Download the embedding model (optional, to be used for semantic search)**
 
-Support the following 11 models, multiple can be downloaded and placed in the `embedding_madels` path:
+Support the following 11 models, multiple can be downloaded and placed in the `embedding_models` path:
 1. [granite-embedding-small-english-r2](https://huggingface.co/ibm-granite/granite-embedding-small-english-r2)
 2. [granite-embedding-english-r2](https://huggingface.co/ibm-granite/granite-embedding-english-r2)
 3. [granite-embedding-107m-multilingual](https://huggingface.co/ibm-granite/granite-embedding-107m-multilingual)
@@ -82,9 +81,9 @@ Support the following 11 models, multiple can be downloaded and placed in the `e
 10. [e5-base-v2](https://huggingface.co/intfloat/e5-base-v2)
 11. [multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small)
 
-The following example is downloaded to three models in the local `embedding_madels` path. During compilation, each model in the `embedding_madels` path will be used to calculate the embedding of the description information for each snippet in the `snipets_database` path. When compiled into the program, semantic search does not require runtime calculation.
+The following example is downloaded to three models in the local `embedding_models` path. During compilation, each model in the `embedding_models` path will be used to calculate the embedding of the description information for each snippet in the `snippets_database` path. When compiled into the program, semantic search does not require runtime calculation.
 ```
-embedding_models # The local model path is fixed to "./embedding_madels" during compilation. When using, it can be specified through "-p", or the environment variable "SNIPPETS_MODEL_PATH" can be set, or it can be placed in the "embedding_madels" folder in the same path as the program. The default is "./embedding_madels"
+embedding_models # The local model path is fixed to "./embedding_models" during compilation. When using, it can be specified through "-p", or the environment variable "SNIPPETS_MODEL_PATH" can be set, or it can be placed in the "embedding_models" folder in the same path as the program. The default is "./embedding_models"
  ├─ granite-embedding-107m-multilingual
  │   ├─ config.json
  │   ├─ model.safetensors
@@ -101,11 +100,11 @@ embedding_models # The local model path is fixed to "./embedding_madels" during 
 
 ## 📖 Usage example
 
-1. 查看所有snippets（id、描述信息、分类），并统计每种分类的数量
+1. View all snippets and count of each category
     ```
     snippets -u all
     ```
-    命令行显示：
+    Command line display:
     ```
     # ┌─────┬────────────────────┬────────────────┐
     # │ id  │ discription        │ categories     │
@@ -137,11 +136,11 @@ embedding_models # The local model path is fixed to "./embedding_madels" during 
     # +------------+-------+
     ```
 
-2. 根据id选择（多个id用`,`间隔），打印具体内容
+2. Select based on the id (multiple IDs separated by `,`) and print the content
     ```
     snippets -i 27,29
     ```
-    命令行显示：
+    Command line display:
     ```
     # ┌────┬─────────────────────────────┬────────────┐
     # │ id │ discription                 │ categories │
@@ -168,73 +167,73 @@ embedding_models # The local model path is fixed to "./embedding_madels" during 
     # +----+-----------------------------+------------+
     ```
 
-3. 根据分类标签选择，标签不区分大小写，打印具体内容
+3. Select based on tags, labels are not case sensitive
     ```
     snippets -t r
     ```
 
-4. 多个标签用`,`间隔，选取同时含有指定的多个标签的snippets
+4. Multiple tags are separated by `,` to select snippets that contain multiple specified tags at the same time
     ```
     snippets -t r,command
     ```
 
-5. 使用关键词搜索，会在discription描述信息和content具体内容中搜索，不区分大小写
+5. Using keyword search will search in the description and content, without distinguishing between uppercase and lowercase letters
     ```
     snippets -e "pandas"
     ```
 
-6. -t和-e可以联合使用，缩小搜索范围
+6. `-t` and `-e` can be used together to narrow down the search scope
     ```
     snippets -t code -e "pandas"
     ```
 
-7. 搜索时使用`-m`指定embedding模型，则进行语义搜索，默认打印前5个（可以使用`-n`指定数量，或设置环境变量`SNIPPETS_NUM`）相似度最高的snippets。`-m 1`表示使用`granite-embedding-small-english-r2`模型。可使用`-p`指定模型路径，不指定`-p`则在当前路径`./embedding_models`文件夹、程序同路径下`embedding_models`文件夹、环境变量`SNIPPETS_MODEL_PATH`搜索，都不存在则报错
+7. When searching, use `-m` to specify the embedding model for semantic search. By default, print the top 5 (you can use `-n` to specify the number, or set the environment variable `SNIPPETS_NUM`) most similar snippets. `-m 1` indicates the use of the `granite-embedding-small-english-r2` model. You can use `-p` to specify the model path. If you do not specify `-p`, you will search in the `./embedding_models` folder in the current path, the `embedding_models` folder in the same path as the program, or the environment variable `SNIPPETS_MODEL_PATH`. If none of them exist, an error will be reported.
     ```
     snippets -e "python pandas usage" -m 1
     ```
 
-8. 如果编译时使用了`cuda`或`metal`，则优先使用GPU计算embedding，可使用`-C`强制使用CPU，或设置环境变量`SNIPPETS_CPU=true`
+8. If `cuda` or `metal` is used during compilation, GPU computing for embeddings will be prioritized. You can use `-C` to force CPU usage, or set the environment variable `SNIPPETS_CPU=true`
     ```
     snippets -e "python pandas usage" -m 1 -C
     ```
 
-9. 使用`-s`或设置环境变量`SNIPPETS_SAVE=true`，将获取的snippets保存至本地（以id为文件名，主体内容、描述信息、分类标签写入到文件中）
+9. Use `-s` or set the environment variable `SNIPPETS_SAVE=true` to save the obtained snippets locally (with id as the file name, and write the main content, description information to the file)
     ```
     snippets -i 27,29 -s
     ```
-    生成以下2个文件：
+    Generate the following two files:
     ```
     saved_snippets
-     ├─ 27.r # 分类标签含有R，格式后缀为`.r`，描述信息前加上`# `作为注释
-     └─ 29.r # 分类标签含有R，格式后缀为`.r`，描述信息前加上`# `作为注释
+     ├─ 27.r # tags contain "R", file name with a format suffix of `.r`, and "#" is added before the description as a comment
+     └─ 29.r # tags contain "R", file name with a format suffix of `.r`, and "#" is added before the description as a comment
     ```
 
-10. 指定`-c`或设置环境变量`SNIPPETS_CLIPBOARD=true`，将获取的snippets复制到剪切板（只复制主体内容，不包含id、描述信息、分类标签）
+10. Specify `-c` or set the environment variable `SNIPPETS_CLIPBOARD=true` to copy the obtained snippets to the clipboard (only copy the main content, excluding id, description, and tags)
     ```
     snippets -i 27,29 -c
     ```
 
-## 🛠 从源码编译
-- 默认使用CPU，不使用GPU，不使用embedding语义搜索
+## 🛠 Building from source
+- By default, CPU will be used, GPU will not be used, and embedding semantic search will not be used
   ```
   git clone https://github.com/jingangdidi/snippets.git
   cd snippets
   cargo build --release
   ```
-- 使用CPU，使用embedding语义搜索
+- Using CPU and embedding semantic search
   ```
   cargo build --release --features embedding
   ```
-- Windows和Linux使用CUDA，使用embedding语义搜索
+- Windows and Linux use CUDA and embedding semantic search
   ```
   cargo build --release --features cuda
   ```
-- MacOS使用Metal，使用embedding语义搜索
+- MacOS uses Metal and embedding semantic search
   ```
   cargo build --release --features metal
   ```
 
-## 🚥 命令行参数
+## 🚥 Arguments
 ```
 Usage: snippets [-i <id>] [-t <tag>] [-e <search>] [-f <file>] [-m <model>] [-p <model-path>] [-C] [-n <num>] [-u <summary>] [-s] [-c] [-o <outpath>]
 
@@ -267,17 +266,13 @@ Options:
   -h, --help        display usage information
 ```
 
-## 💡 注意
-- 编译时会读取`./snippets_database`路径下所有`*.snippets`文件（除了`exmaple.snippets`和`default.snippets`），并用`./embedding_models`路径下所有模型计算discription描述信息的embedding（如果编译时指定了`--features embedding`），合并保存为`default.snippets`，然后编译到程序中作为默认库，使用时就不需要依赖`.snippets`文件了。如果编译时`./snippets_database`路径不存在，或其中不含有`*.snippets`文件，则仅支持默认的11个tag标签
-- 使用语义搜索时如果不指定`-p`，则会依次在当前路径`./embedding_models`文件夹、程序同路径下`embedding_models`文件夹、环境变量`SNIPPETS_MODEL_PATH`搜索模型文件，都不存在则报错
-- 可以通过`-f`参数指定`.snippets`文件（多个之间`,`间隔），或含有`.snippets`文件的路径（读取该路径下所有`.snippets`文件），覆盖编译在程序内的snippets
-- 如果不指定`-f`，会自动在当前路径下搜索`.snippets`文件，没有搜索到则在程序所在路径下搜索，还没有搜索到则会使用默认编译在程序内的`default.snippets`
-- 含有中文时，Windows下Cmder显示的表格会对不齐，可修改设置：
-  ```
-  General --> Fonts --> 去掉勾选的“Compress long  string to fit space”
-  ```
-- `-i`, `-t`, `-e`, `-u`不能同时使用，每次最多使用一个，同时使用则显示报错
-- `-t`和`-e`可以同时使用，在指定分类中搜索
+## 💡 Note
+- During compilation, all `.snippets` files in the `snippets_database` path will be read (except for `exmaple.snippets` and `default.snippets`), and the embeddings of the description information will be calculated using all models in the `embedding_models` path (if `--features embedding` is specified during compilation), merged and saved as `default.snippets`, and then compiled into the program as the default database. When used, there is no need to rely on any `.snippets` files. If the `snippets_database` path does not exist at compile time or does not contain `.snippets` files, only the default 11 tags are supported.
+- If `-p` is not specified when using semantic search, the model files will be searched in the current path `./embedding_models` folder, the same path as the program's `embedding_models` folder, and the environment variable `SNIPPETS_MODEL_PATH`. If none of them exist, an error will be reported.
+- You can use the `-f` parameter to specify `.snippets` files (multiple files separated by commas), or a path containing `.snippets` files (which will read all `.snippets` files under that path), ignoring the compiled default snippets in the program.
+- If `-f` is not specified, these `.snippets` files will be automatically searched in the current path. If it is not found, it will be searched in the path where the program is located. If it is not found yet, the default sniplets compiled in the program will be used.
+- `-i`, `-t`, `-e`, `-u` cannot be used simultaneously. A maximum of one can be used at a time, and an error message will be displayed if used simultaneously.
+- `-t` and `-e` can be used simultaneously to search within specified categories.
 
-## ⏰ 更新记录
+## ⏰ changelog
 - [2025.10.16] release v0.1.0
