@@ -21,8 +21,10 @@ pub fn get_snippet_files() -> Result<Vec<PathBuf>, MyError> {
     files.extend(get_snippets(current_path));
     // search from binary file path
     if files.is_empty() {
-        if let Ok(binary_path) = current_exe() {
-            files.extend(get_snippets(&binary_path));
+        if let Ok(mut binary_path) = current_exe() {
+            if binary_path.pop() { // Truncates binary_path to parent
+                files.extend(get_snippets(&binary_path));
+            }
         }
     }
     Ok(files)
@@ -63,3 +65,4 @@ pub fn cosine_similarity(vec_a: &Vec<f32>, vec_b: &Vec<f32>) -> Result<f32, MyEr
 
     Ok(ab / (sum_a.sqrt() * sum_b.sqrt()))
 }
+
