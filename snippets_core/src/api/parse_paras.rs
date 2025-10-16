@@ -1,4 +1,4 @@
-use std::env::{self, VarError};
+use std::env::{self, current_exe, VarError};
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 
@@ -158,9 +158,24 @@ pub fn parse_para() -> Result<ParsedParas, MyError> {
             Some(m) => {
                 let p = match &para.model_path {
                     Some(p) => p.clone(),
-                    None => match EnvVarValue::Str("./embedding_models/".to_string()).get_env_var("SNIPPETS_MODEL_PATH")? {
-                        EnvVarValue::Str(p) => p,
-                        _ => unreachable!(),
+                    None => {
+                        // get model from path of the current running executable
+                        let binary_path = match current_exe() {
+                            Ok(binary_path) => binary_path.join("embedding_models").to_str().unwrap().to_string(),
+                            Err(_) => "./embedding_models/".to_string(),
+                        };
+                        // get model from env
+                        let current_path_or_env = match EnvVarValue::Str("./embedding_models/".to_string()).get_env_var("SNIPPETS_MODEL_PATH")? {
+                            EnvVarValue::Str(p) => p,
+                            _ => unreachable!(),
+                        };
+                        // check modle exist, priority order: ./embedding_models/ > embedding_models in path of the current running executable > SNIPPETS_MODEL_PATH
+                        match (check_model_exist("./embedding_models/", m).is_ok(), check_model_exist(&binary_path, m).is_ok(), check_model_exist(&current_path_or_env, m).is_ok()) {
+                            (true, _, _) => "./embedding_models/".to_string(),
+                            (false, true, _) => binary_path,
+                            (false, false, true) => current_path_or_env,
+                            (false, false, false) => return Err(MyError::ParaError{para: format!(r#"couldn't find model in "./embedding_models/", "{}" and "SNIPPETS_MODEL_PATH""#, binary_path)}),
+                        }
                     },
                 };
                 let (model, model_type, model_path, config_path, tokenizer_path) = check_model_exist(&p, m)?;
